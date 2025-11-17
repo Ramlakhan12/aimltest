@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI & ML Basics Quiz</title>
+    <!-- Load Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; /* Dark background */
+        }
+        .container-card {
+            background-color: #161b22; /* Slightly lighter card color */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
+        }
+        .answer-button {
+            transition: all 0.2s ease;
+        }
+        .correct {
+            background-color: #10b981; /* Emerald 500 */
+            border-color: #059669;
+            color: white;
+        }
+        .incorrect {
+            background-color: #ef4444; /* Red 500 */
+            border-color: #dc2626;
+            color: white;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div id="quiz-container" class="container-card w-full max-w-2xl p-6 md:p-10 rounded-xl border border-gray-700">
+        
+        <h1 class="text-3xl font-bold text-center text-gray-50 mb-6">AI & ML Basics Quiz</h1>
+        <div id="progress" class="mb-4 text-center text-sm text-gray-400"></div>
+        <div id="question-area">
+            <!-- Question will be injected here -->
+            <div id="question-text" class="text-xl font-semibold text-gray-200 mb-6"></div>
+            
+            <div id="options-container" class="space-y-3">
+                <!-- Answer buttons will be injected here -->
+            </div>
+            
+            <div id="feedback-area" class="mt-6">
+                <p id="rationale-text" class="text-sm text-gray-400 border-l-4 pl-4 py-2 hidden"></p>
+                <button id="next-button" 
+                        class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition duration-150 ease-in-out hidden"
+                        onclick="nextQuestion()">
+                    Next Question
+                </button>
+            </div>
+        </div>
+
+        <div id="results-area" class="text-center hidden">
+            <!-- Results will be injected here -->
+        </div>
+
+    </div>
+
+    <script>
+        // --- QUIZ DATA (CAMOUFLAGED) ---
+        // 'isCorrect' is now stored as a Base64 encoded string ('YmFzZTY0') to prevent easy inspection.
+        const quizData = {
+            "questions": [
+                {
+                    "questionNumber": 1,
+                    "question": "Which term best describes the process where a computer system learns from data without being explicitly programmed for every specific rule?",
+                    "answerOptions": [
+                        {"text": "Artificial Intelligence (AI)", "isCorrectB64": "ZmFsc2U=", "rationale": "AI is the broad field of creating intelligent agents, but Machine Learning is the specific subset focused on learning from data to improve performance."},
+                        {"text": "Machine Learning (ML)", "isCorrectB64": "dHJ1ZQ==", "rationale": "Machine Learning is the correct subset of AI where systems use statistical techniques to learn from data and make predictions or decisions."},
+                        {"text": "Deep Learning (DL)", "isCorrectB64": "ZmFsc2U=", "rationale": "Deep Learning is a specialized type of Machine Learning that uses deep neural networks, making it too specific for the general concept of learning from data."},
+                        {"text": "Computer Vision", "isCorrectB64": "ZmFsc2U=", "rationale": "Computer Vision is an application area of AI/ML focused on enabling computers to interpret and understand visual data, not the learning process itself."}
+                    ]
+                },
+                {
+                    "questionNumber": 2,
+                    "question": "In the context of the MNIST dataset, what is the typical structure and channel count of a single image's data when prepared for a CNN?",
+                    "answerOptions": [
+                        {"text": "A 3D array with 3 channels (RGB)", "isCorrectB64": "ZmFsc2U=", "rationale": "MNIST images are grayscale, meaning they only use one channel, not three (RGB)."},
+                        {"text": "A 2D array with pixel values 0 or 1", "isCorrectB64": "ZmFsc2U=", "rationale": "While normalized to 0-1, the data still uses a range of values and often includes multiple dimensions for the network."},
+                        {"text": "A 3D array with 1 channel (Grayscale)", "isCorrectB64": "dHJ1ZQ==", "rationale": "The MNIST dataset consists of 28x28 grayscale images, which is represented as a 3D array (Height, Width, 1) when prepared for a CNN model."},
+                        {"text": "A 1D array of 784 features", "isCorrectB64": "ZmFsc2U=", "rationale": "A 1D array (784 features) is the result of applying the Flatten layer, not the initial structure of the image data for a CNN."}
+                    ]
+                },
+                {
+                    "questionNumber": 3,
+                    "question": "What is the primary purpose of the **Convolutional Layer** in a Convolutional Neural Network (CNN)?",
+                    "answerOptions": [
+                        {"text": "To reduce the image size, simplifying the data.", "isCorrectB64": "ZmFsc2U=", "rationale": "This describes the primary role of a Pooling layer, not the Convolutional layer."},
+                        {"text": "To convert the 2D image data into a 1D vector.", "isCorrectB64": "ZmFsc2U=", "rationale": "This is the function of the Flatten layer, which typically comes after the convolutional and pooling blocks."},
+                        {"text": "To automatically detect and extract meaningful features like edges, textures, and patterns from the input image.", "isCorrectB64": "dHJ1ZQ==", "rationale": "The Convolutional Layer uses filters (kernels) to systematically scan the image and create feature maps that highlight key patterns, which is essential for feature extraction."},
+                        {"text": "To output the final probability scores for each class.", "isCorrectB64": "ZmFsc2U=", "rationale": "The final Dense (output) layer is responsible for generating the probability scores."}
+                    ]
+                },
+                {
+                    "questionNumber": 4,
+                    "question": "Why is **Normalization** (scaling pixel values from 0-255 to 0-1) an essential step in Image Data Preprocessing for neural networks?",
+                    "answerOptions": [
+                        {"text": "It decreases the number of layers required in the CNN architecture.", "isCorrectB64": "ZmFsc2U=", "rationale": "Normalization does not affect the network architecture but rather the stability and speed of the learning process."},
+                        {"text": "It converts the pixel data from grayscale to a binary format.", "isCorrectB64": "ZmFsc2U=", "rationale": "Normalization scales the numerical range but doesledes not change the data type to a binary format (0 or 1)."},
+                        {"text": "It speeds up training convergence by ensuring all input values are on a small, consistent scale.", "isCorrectB64": "dHJ1ZQ==", "rationale": "By scaling the input to a small range (0 to 1), the training process (gradient descent) remains stable and converges much faster."},
+                        {"text": "It prevents the model from being able to read the data, forcing it to learn from scratch.", "isCorrectB64": "ZmFsc2U=", "rationale": "This is incorrect; the network is designed to read the normalized data."}
+                    ]
+                },
+                {
+                    "questionNumber": 5,
+                    "question": "If your CNN was trained on MNIST, what shape must a single input image array be expanded to before being fed into the `model.predict()` function?",
+                    "answerOptions": [
+                        {"text": "(28, 28, 1)", "isCorrectB64": "ZmFsc2U=", "rationale": "This is the correct shape for the image itself, but it is missing the necessary batch size dimension expected by the prediction function."},
+                        {"text": "(1, 28, 28, 1)", "isCorrectB64": "dHJ1ZQ==", "rationale": "The model requires the 4D tensor format: (Batch Size, Height, Width, Channels), so a single image is represented with a batch size of 1."},
+                        {"text": "(784, 1)", "isCorrectB64": "ZmFsc2U=", "rationale": "This shape is used for fully connected layers but typically only after the Flatten layer."},
+                        {"text": "No Batch Size needed", "isCorrectB64": "ZmFsc2U=", "rationale": "This is incorrect. All deep learning models expect a batch dimension, even if the batch size is 1."}
+                    ]
+                },
+                {
+                    "questionNumber": 6,
+                    "question": "The **Flatten Layer** is typically placed after the Convolutional and Pooling layers but before the final Dense layers. What transformation does the Flatten layer perform?",
+                    "answerOptions": [
+                        {"text": "It compresses the image by removing low-value pixels.", "isCorrectB64": "ZmFsc2U=", "rationale": "Compression is generally handled by the Pooling layer, not the Flatten layer."},
+                        {"text": "It converts the multi-dimensional feature maps into a single, long vector of pixel values.", "isCorrectB64": "dHJ1ZQ==", "rationale": "The Flatten layer rearranges the 3D feature data (Height x Width x Channels) into a 1D vector to be processed by the final standard Dense layers."},
+                        {"text": "It applies the Rectified Linear Unit (ReLU) activation function.", "isCorrectB64": "ZmFsc2U=", "rationale": "ReLU is an activation function applied within the convolutional or dense layers."},
+                        {"text": "It calculates the error rate between the predicted and true labels.", "isCorrectB64": "ZmFsc2U=", "rationale": "The loss function is responsible for calculating the error rate."}
+                    ]
+                },
+                {
+                    "questionNumber": 7,
+                    "question": "In a multi-class classification problem like digit recognition (0-9), which activation function is used in the final output layer to produce a probability distribution?",
+                    "answerOptions": [
+                        {"text": "ReLU (Rectified Linear Unit)", "isCorrectB64": "ZmFsc2U=", "rationale": "ReLU is used in hidden layers to introduce non-linearity, not for the final probability output."},
+                        {"text": "Sigmoid", "isCorrectB64": "ZmFsc2U=", "rationale": "Sigmoid is typically used for binary (two-class) classification, not for ten distinct classes."},
+                        {"text": "Softmax", "isCorrectB64": "dHJ1ZQ==", "rationale": "The Softmax activation function is used in the output layer of multi-class models to convert raw scores into probabilities that sum up to 1."},
+                        {"text": "Tanh (Hyperbolic Tangent)", "isCorrectB64": "ZmFsc2U=", "rationale": "Tanh is an activation function used in hidden layers, similar to ReLU."}
+                    ]
+                },
+                {
+                    "questionNumber": 8,
+                    "question": "What does the term **Epoch** refer to in the context of model training?",
+                    "answerOptions": [
+                        {"text": "One forward pass and one backward pass of the neural network on a single training example.", "isCorrectB64": "ZmFsc2U=", "rationale": "This describes a single iteration or step in the training process, not an entire epoch."},
+                        {"text": "The calculation of the loss function.", "isCorrectB64": "ZmFsc2U=", "rationale": "The loss function is calculated continuously, but is not the definition of an epoch."},
+                        {"text": "One complete pass through the entire training dataset by the algorithm.", "isCorrectB64": "dHJ1ZQ==", "rationale": "An epoch represents the time when an entire dataset has been passed through the network exactly once, marking one cycle of the learning process."},
+                        {"text": "The number of hidden layers in the neural network.", "isCorrectB64": "ZmFsc2U=", "rationale": "The number of hidden layers is a structural property of the model architecture, not the training process itself."}
+                    ]
+                },
+                {
+                    "questionNumber": 9,
+                    "question": "For a classification problem, the model's output is an array of probabilities. How is the final predicted class determined from this array?",
+                    "answerOptions": [
+                        {"text": "By selecting the average probability value.", "isCorrectB64": "ZmFsc2U=", "rationale": "Averaging the probabilities does not indicate the most likely class."},
+                        {"text": "By manually comparing the output array to the true label.", "isCorrectB64": "ZmFsc2U=", "rationale": "This step is part of evaluation, but the prediction itself is a property of the output array."},
+                        {"text": "By selecting the index (class) corresponding to the highest probability value.", "isCorrectB64": "dHJ1ZQ==", "rationale": "The prediction is the class (index 0-9) for which the model outputs the maximum confidence score in the final probability array."},
+                        {"text": "By summing all the probability values.", "isCorrectB64": "ZmFsc2U=", "rationale": "The probabilities in a Softmax output already sum to 1.0, so this action does not yield the predicted class."}
+                    ]
+                },
+                {
+                    "questionNumber": 10,
+                    "question": "In the MNIST preprocessing, labels like '5' and '9' are converted to vector formats like [0, 0, 0, 0, 0, 1, 0, 0, 0, 0] and [0, 0, 0, 0, 0, 0, 0, 0, 0, 1]. What is this technique called?",
+                    "answerOptions": [
+                        {"text": "Tensor Reshaping", "isCorrectB64": "ZmFsc2U=", "rationale": "Tensor reshaping refers to changing the dimensions of the image data, not the categorical labels."},
+                        {"text": "One-Hot Encoding", "isCorrectB64": "dHJ1ZQ==", "rationale": "One-Hot Encoding is the correct method for converting categorical integer labels into a binary vector format for classification models."},
+                        {"text": "Dimensionality Reduction", "isCorrectB64": "ZmFsc2U=", "rationale": "Dimensionality reduction decreases the number of features, which is the opposite of expanding the label into a 10-element vector."},
+                        {"text": "Pixel Inversion", "isCorrectB64": "ZmFsc2U=", "rationale": "Pixel inversion is a color adjustment technique applied to the image data, not the labels."}
+                    ]
+                }
+            ]
+        };
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        const questionTextElement = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const nextButton = document.getElementById('next-button');
+        const rationaleText = document.getElementById('rationale-text');
+        const progressElement = document.getElementById('progress');
+        const questionArea = document.getElementById('question-area');
+        const resultsArea = document.getElementById('results-area');
+
+        // Function to decode Base64 string to check the answer
+        function decodeB64(encodedString) {
+            try {
+                // Decode the base64 string
+                const decodedString = atob(encodedString);
+                // Check if the decoded string is 'true'
+                return decodedString === 'true';
+            } catch (e) {
+                console.error("Decoding error:", e);
+                return false; // Default to false on error
+            }
+        }
+
+        // --- ANTI-INSPECTION CODE (Easily bypassed, but stops casual users) ---
+
+        // 1. Disable Right-Click
+        function disableRightClick(event) {
+            event.preventDefault();
+        }
+        document.addEventListener('contextmenu', disableRightClick);
+
+        // 2. Disable Key Combinations (F12, Ctrl+Shift+I, etc.)
+        function disableKeyCombos(event) {
+            // F12 key (Developer tools)
+            if (event.keyCode === 123) {
+                event.preventDefault();
+                return false;
+            }
+            // Ctrl+Shift+I (Developer Tools - Chromium/Firefox)
+            if (event.ctrlKey && event.shiftKey && event.keyCode === 73) {
+                event.preventDefault();
+                return false;
+            }
+            // Ctrl+Shift+J (Console - Chromium)
+            if (event.ctrlKey && event.shiftKey && event.keyCode === 74) {
+                event.preventDefault();
+                return false;
+            }
+        }
+        document.addEventListener('keydown', disableKeyCombos);
+        
+        // ----------------------------------------------------
+
+
+        function renderQuestion() {
+            if (currentQuestionIndex >= quizData.questions.length) {
+                showResults();
+                return;
+            }
+
+            answered = false;
+            nextButton.classList.add('hidden');
+            rationaleText.classList.add('hidden');
+            rationaleText.classList.remove('incorrect', 'correct');
+            rationaleText.classList.remove('border-red-500', 'border-green-500');
+            optionsContainer.innerHTML = '';
+
+            const currentQ = quizData.questions[currentQuestionIndex];
+            
+            progressElement.textContent = `Question ${currentQuestionIndex + 1} of ${quizData.questions.length}`;
+            questionTextElement.innerHTML = `${currentQ.questionNumber}. ${currentQ.question}`;
+            
+            // Randomize options just in case
+            const options = currentQ.answerOptions.sort(() => Math.random() - 0.5); 
+
+            options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.innerHTML = option.text;
+                button.className = 'answer-button w-full text-left p-3 rounded-lg border-2 border-gray-600 bg-gray-700 text-gray-200 hover:bg-gray-600 focus:outline-none';
+                
+                // Pass the whole option object (including the B64 string) to checkAnswer
+                button.onclick = () => checkAnswer(option, button); 
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selectedOption, button) {
+            if (answered) return;
+            answered = true;
+
+            const isCorrect = decodeB64(selectedOption.isCorrectB64);
+
+            const allButtons = optionsContainer.querySelectorAll('.answer-button');
+            allButtons.forEach(btn => {
+                btn.disabled = true;
+            });
+
+            rationaleText.textContent = selectedOption.rationale;
+
+            if (isCorrect) {
+                score++;
+                button.classList.add('correct', 'border-green-500');
+                rationaleText.classList.add('border-green-500', 'text-green-300');
+            } else {
+                button.classList.add('incorrect', 'border-red-500');
+                rationaleText.classList.add('border-red-500', 'text-red-300');
+                
+                // Highlight the correct answer
+                const correctOption = quizData.questions[currentQuestionIndex].answerOptions.find(opt => decodeB64(opt.isCorrectB64));
+                allButtons.forEach(btn => {
+                    if (btn.textContent === correctOption.text) {
+                        btn.classList.add('correct', 'border-green-500');
+                    }
+                });
+            }
+
+            rationaleText.classList.remove('hidden');
+            nextButton.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            renderQuestion();
+        }
+
+        function showResults() {
+            questionArea.classList.add('hidden');
+            resultsArea.classList.remove('hidden');
+
+            const totalQuestions = quizData.questions.length;
+            const percentage = ((score / totalQuestions) * 100).toFixed(0);
+
+            let message = '';
+            if (percentage >= 80) {
+                message = "Excellent! You have a strong grasp of the AI/ML fundamentals. You're ready for the hands-on session!";
+            } else if (percentage >= 50) {
+                message = "Good job! You understand the core concepts. Pay close attention to the data preprocessing and CNN structure in the session.";
+            } else {
+                message = "Keep learning! Review the concepts on image data and neural network layers before the session for a better experience.";
+            }
+
+            resultsArea.innerHTML = `
+                <h2 class="text-3xl font-bold text-white mb-4">Quiz Complete!</h2>
+                <p class="text-5xl font-extrabold text-blue-400 mb-6">${score} / ${totalQuestions}</p>
+                <p class="text-2xl font-semibold text-gray-300 mb-4">${percentage}% Correct</p>
+                <p class="text-lg text-gray-400 max-w-md mx-auto">${message}</p>
+                <button onclick="window.location.reload()" class="mt-8 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-150 ease-in-out">
+                    Retake Quiz
+                </button>
+            `;
+        }
+
+        // Initialize the quiz when the page loads
+        document.addEventListener('DOMContentLoaded', renderQuestion);
+    </script>
+</body>
+</html>
